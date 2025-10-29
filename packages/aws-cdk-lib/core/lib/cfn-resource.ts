@@ -432,7 +432,6 @@ export class CfnResource extends CfnRefElement {
           [this.logicalId]: new PostResolveToken({
             Type: this.cfnResourceType,
             Properties: ignoreEmpty(this.cfnProperties),
-            DependsOn: ignoreEmpty(renderDependsOn(this.dependsOn)),
             CreationPolicy: capitalizePropertyNames(this, renderCreationPolicy(this.cfnOptions.creationPolicy)),
             UpdatePolicy: capitalizePropertyNames(this, this.cfnOptions.updatePolicy),
             UpdateReplacePolicy: capitalizePropertyNames(this, this.cfnOptions.updateReplacePolicy),
@@ -447,6 +446,7 @@ export class CfnResource extends CfnRefElement {
               const hasDefined = Object.values(renderedProps).find(v => v !== undefined);
               resourceDef.Properties = hasDefined !== undefined ? renderedProps : undefined;
             }
+            resourceDef.DependsOn = ignoreEmpty(renderDependsOn(this.dependsOn));
             const resolvedRawOverrides = context.resolve(this.rawOverrides, {
               // we need to preserve the empty elements here,
               // as that's how removing overrides are represented as

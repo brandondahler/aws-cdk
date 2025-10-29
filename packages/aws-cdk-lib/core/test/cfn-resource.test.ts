@@ -272,6 +272,39 @@ describe('cfn resource', () => {
         resource1.replaceDependency(resource2, resource3);
       }).toThrow(/does not depend on/);
     });
+
+    test('dependencies added during synthesis are ', () => {
+      const app = new core.App();
+      const stack = new core.Stack(app, 'TestStack');
+      const resource1 = new core.CfnResource(stack, 'Resource1', { type: 'Test::Resource::Fake1' });
+      const resource2 = new core.CfnResource(stack, 'Resource2', {
+        type: 'Test::Resource::Fake2',
+        properties: {
+          FakeProperty: core.Lazy.uncachedString({
+            produce: (context: core.IResolveContext) => {
+              (context.scope as core.CfnResource).addDependency(resource1);
+
+              return 'FakeValue';
+            },
+          }),
+        },
+      });
+
+      expect(app.synth().getStackByName(stack.stackName).template.Resources).toEqual({
+        Resource1: {
+          Type: 'Test::Resource::Fake1',
+        },
+        Resource2: {
+          Type: 'Test::Resource::Fake2',
+          DependsOn: [
+            'Resource1',
+          ],
+          Properties: {
+            FakeProperty: 'FakeValue',
+          },
+        },
+      });
+    });
   });
 
   test('applyRemovalPolicy default includes Update policy', () => {
